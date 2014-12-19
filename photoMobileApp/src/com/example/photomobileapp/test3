@@ -1,0 +1,266 @@
+package com.example.songlibrary;
+
+import java.io.BufferedReader;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.PrintWriter;
+import java.util.ArrayList;
+import java.util.NoSuchElementException;
+
+import android.content.Context;
+import android.widget.Toast;
+
+/**
+ * This class implements the Singleton pattern: only one instance can be
+ * created. 
+ * 
+ * @author Sesh Venugopal
+ *
+ */
+public class MySongList implements SongList {
+
+	// single instance
+	private static MySongList songList=null;
+	
+	// holds songs in a sorted array list
+	private ArrayList<Song> songs;
+	
+	// keep track of max id dealt out so far
+	private int maxId;
+	
+	// context
+	private Context context;
+	
+	// songs file
+	public static final String SONGS_FILE = "songs.dat";
+	
+	// make constructor private for single instance control
+	private MySongList() {
+		songs = new ArrayList<Song>();
+		maxId = -1;
+	}
+	
+	// deal out the singleton
+	public static MySongList getInstance() {
+		if (songList == null) {
+			songList = new MySongList();
+		}
+		return songList;
+	}
+	
+	public Song add(String name, String artist, String album, String year) {
+		// name and artist are mandatory
+		if (name == null || artist == null) {
+			throw new IllegalArgumentException("Name and artist are mandatory");
+		}
+		
+		// set id to next available
+		maxId++;
+		
+		// create Song object
+		Song song = new Song(maxId, name, artist, album, year);
+		
+		// if this is the first add, it's easy
+		if (songs.size() == 0) {
+			try {
+				songs.add(song);
+				store();
+			} catch (IOException e) {
+				Toast.makeText(context, "Could not store songs to file", Toast.LENGTH_SHORT).show();	
+			}
+			return song;
+		}
+
+		// search in array list and add at correct spot
+		int lo=0, hi=songs.size()-1, mid=-1, c=0;
+		while (lo <= hi) {
+			mid = (lo+hi)/2;
+			c = song.compareTo(songs.get(mid));
+			if (c == 0) {  // duplicate name
+				break;
+			}
+			if (c < 0) {
+				hi = mid-1;
+			} else {
+				lo = mid+1;
+			}
+		}
+		int pos = c <= 0 ? mid : mid+1;
+		// insert at pos
+		songs.add(pos,song);
+		// write through
+		try {
+			store();
+		} catch (IOException e) {
+			Toast.makeText(context, "Could not store songs to file", Toast.LENGTH_SHORT).show();	
+		}
+		return song;
+	}
+
+	public int getPos(Song song) {
+		if (songs.size() == 0) {
+			return -1;
+		}
+
+		// search in array list for name match, then id match
+		int lo=0, hi=songs.size()-1;
+		
+		while (lo <= hi) {
+			int mid = (lo+hi)/2;
+			Song lsong = songs.get(mid);
+			int c = song.compareTo(lsong);
+			if (c == 0) {  // need to compare id
+				if (song.id == lsong.id) {
+					return mid;
+				}
+				// check left
+				int i=mid-1;
+				while (i >= 0) {
+					lsong = songs.get(i);
+					if (song.compareTo(lsong) == 0 && song.id == lsong.id) {
+						return i;
+					}
+					i--;
+				}
+				// check right
+				i = mid+1;
+				while (i < songs.size()) {
+					lsong = songs.get(i);
+					if (song.compareTo(lsong) == 0 && song.id == lsong.id) {
+						return i;
+					}
+					i++;
+				}
+				return -1;
+			}
+			if (c < 0) {
+				hi = mid-1;
+			} else {
+				lo = mid+1;
+			}
+		}
+		return -1;
+	}
+
+	public ArrayList<Song> getSongs() {
+		return songs;
+	}
+
+	public void load() throws IOException {
+		int maxId = -1;
+		try {
+			FileInputStream fis = 
+					context.openFileInput(SONGS_FILE);
+			BufferedReader br = 
+					new BufferedReader(
+							new InputStreamReader(fis));
+			String songInfo;
+			while ((songInfo = br.readLine()) != null) {
+				Song song = Song.parseSong(songInfo);
+				maxId++;
+				song.id = maxId;
+				songs.add(song);
+			}
+			this.maxId = maxId;
+			fis.close();
+			//Toast.makeText(context, "Loaded from file", Toast.LENGTH_SHORT).show();
+
+		} catch (FileNotFoundException e) {
+			String[] songs = 
+					context.getResources().getStringArray(R.array.song_array);
+			for (int i=0; i < songs.length; i++) {
+				int pos = songs[i].indexOf('|');
+				add(songs[i].substring(0,pos), songs[i].substring(pos+1),null,null);
+			}
+			//Toast.makeText(context, "Loaded from array", Toast.LENGTH_SHORT).show();
+		}
+	}
+
+	public ArrayList<Song> remove(Song song) throws NoSuchElementException {
+		int pos = getPos(song);
+		if (pos == -1) {
+			throw new NoSuchElementException();
+		}
+		songs.remove(pos);
+		return songs;
+	}
+
+	public void setContext(Context ctx) {
+		// TODO Auto-generated method stub
+		context = ctx;
+	}
+
+	public void store() throws IOException {
+		// TODO Auto-generated method stub
+		FileOutputStream fos = 
+				context.openFileOutput(SONGS_FILE, Context.MODE_PRIVATE);
+		PrintWriter pw = new PrintWriter(fos);
+		for (Song song: songs) {
+			pw.println(song.getString());
+		}
+		pw.close();
+	}
+
+	public ArrayList<Song> update(Song song) throws NoSuchElementException {
+		// since name could be updated, best to sequentially search on id
+		for (int i=0; i < songs.size(); i++) {
+			if (songs.get(i).id == song.id) {
+				songs.set(i, song);
+				try {
+					store();
+				} catch (IOException e) {
+					Toast.makeText(context, "Could not store songs to file", Toast.LENGTH_SHORT).show();	
+				}
+				return songs;
+			}
+		}
+		throw new NoSuchElementException();
+	}
+
+	public int[] search(String query) {
+		int lo=0, hi=songs.size()-1;
+		int[] extent;
+		String song = query.toLowerCase();
+		while (lo <= hi) {
+			int mid=(lo+hi)/2;
+			if (songs.get(mid).name.toLowerCase().startsWith(song)) {
+				// need to scan left and right until no more matches
+				extent = new int[2];
+				extent[0] = mid;
+				// scan left
+				while (extent[0] > 0) {
+					if (songs.get(extent[0]-1).name.toLowerCase().startsWith(
+							song)) {
+						extent[0]--;
+					} else {
+						break;
+					}
+				}
+				// scan right
+				extent[1] = mid;
+				while (extent[1] < songs.size()-1) {
+					if (songs.get(extent[1]+1).name.toLowerCase().startsWith(
+							song)) {
+						extent[1]++;
+					} else {
+						break;
+					}
+				}
+				return extent;
+			} 
+			// mid does not start with the given name, go left or right
+			int c = query.compareToIgnoreCase(songs.get(mid).name);
+			if (c < 0) { 
+				hi = mid-1;
+			} else {
+				lo = mid+1;
+			}
+		}
+
+		return null;
+	}
+
+}

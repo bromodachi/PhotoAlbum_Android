@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+<item android:title="Add Tag" android:icon="@drawable/ic_action_add_to_queue" android:id="@+id/add_tag"/>
+<item android:title="Delete Tag" android:icon="@drawable/ic_action_remove" android:id="@+id/delete_tag"/>
+<item android:title="@string/backAlbum" android:icon="@drawable/ic_action_back" android:id="@+id/backSingle" android:showAsAction="ifRoom"/></menu>

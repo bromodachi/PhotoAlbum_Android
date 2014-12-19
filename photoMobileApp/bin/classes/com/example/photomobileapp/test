@@ -1,0 +1,35 @@
+package com.framentos.list;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import com.framentos.list.R;
+
+import android.app.Activity;
+import android.content.Context;
+import android.os.Bundle;
+import android.view.View;
+import android.widget.AdapterView;
+import android.widget.ListView;
+import android.widget.AdapterView.OnItemClickListener;
+
+public class CityList extends Activity {
+	
+	private ListView listViewCity;
+	private Context ctx;
+	@Override
+	public void onCreate(Bundle savedInstanceState) {
+
+		super.onCreate(savedInstanceState);
+		setContentView(R.layout.city_list);
+		ctx=this;	
+		List<City> listCity= new ArrayList<City>();
+		listCity.add(new City("London","http://en.wikipedia.org/wiki/London","london"));
+		listCity.add(new City("Rome","http://en.wikipedia.org/wiki/Rome","rome"));
+		listCity.add(new City("Paris","http://en.wikipedia.org/wiki/Paris","paris"));
+
+		
+		listViewCity = ( ListView ) findViewById( R.id.city_list);
+		listViewCity.setAdapter( new CityListAdapter(ctx, R.layout.city_row_item, listCity ) );
+	}
+}

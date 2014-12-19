@@ -1,0 +1,1 @@
+Create, delete, rename Albums working correctly. Add, delete, move photos as well.

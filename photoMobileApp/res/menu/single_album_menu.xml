@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android" >
+    <item android:id="@+id/addAlbumSingle"
+          android:icon="@drawable/ic_action_attachment"
+          android:title="@string/addAlbumForSingle"
+          android:showAsAction="ifRoom" />
+	<item android:id="@+id/backSingle"
+          android:icon="@drawable/ic_action_back"
+          android:title="@string/backAlbum"
+          android:showAsAction="ifRoom" />
+	<item android:id="@+id/deletePhoto"
+          android:title="@string/deleteP"/>
+	<item android:id="@+id/MovePhoto"
+          android:title="@string/MovePhotoa"/>
+	<item android:id="@+id/ConfirmMove"
+          android:title="@string/ConfirmMoveSingle"/>
+	<item android:id="@+id/CancelMove"
+          android:title="@string/CancelMoveSingle"/>
+	<item android:id="@+id/ConfirmDelete"
+          android:title="@string/ConfirmDeleteSingle"/>
+	<item android:id="@+id/CancelDelete"
+          android:title="@string/CancelDeleteSingle"/>
+
+</menu>
